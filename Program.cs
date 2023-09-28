@@ -145,6 +145,8 @@ namespace _5_nm_1
 
                     time += Convert.ToInt32(stopwatch.ElapsedMilliseconds);
                 }
+                Console.WriteLine(SupportingFunctions.SubstractVectors(Ni, sp.x, lu.x));
+                Console.WriteLine(SupportingFunctions.GetNorm(Ni, sp.x));
                 delta = SupportingFunctions.GetNorm(Ni, SupportingFunctions.SubstractVectors(Ni, sp.x, lu.x)) / SupportingFunctions.GetNorm(Ni, sp.x);
 
                 time /= numberOfTests;
@@ -418,7 +420,7 @@ namespace _5_nm_1
             {
                 z[i] = x[i] - y[i];
             }
-            return x;
+            return z;
         }
 
         public static double GetNorm(int Ni, double[] x)
