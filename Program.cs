@@ -9,10 +9,11 @@ namespace _5_nm_1
         static void Main() 
         {
             //TEST N
-            //int[] N = { 2000 };
-            int[] N = { 200, 400, 800 };
+            int[] N = { 200 };
+            //int[] N = { 200, 400, 800 };
 
-            int time, numberOfTests = 10;
+            long time;
+            int numberOfTests = 1;
 
             //double[] check = { 0 };
 
@@ -20,39 +21,21 @@ namespace _5_nm_1
 
             StartParameters sp = new();
             LU_Decomposition lu = new();
+            Householder_Transformation hh = new();
 
             Stopwatch stopwatch = new();
 
             foreach (int Ni in N) 
             {
                 //-----------------------START PARAMETERS-----------------------
-                sp.x = StartParameters.GenerateX(Ni);
-                //CHECK X
-                //Console.WriteLine("x: ");
-                //foreach (double xi in sp.x)
-                //{
-                //    Console.Write("{0} ", xi);
-                //}
-                //Console.WriteLine();
 
-                sp.A = StartParameters.GenerateA(Ni);
+                sp.x = StartParameters.GenerateX(Ni);
+
                 //sp.A = StartParameters.GenerateAFromFile(Ni);
-                //CHECK A
-                //Console.WriteLine("A: ");
-                //foreach (double a in sp.A)
-                //{
-                //    Console.Write("{0} ", a);
-                //}
-                //Console.WriteLine();
+                sp.A = StartParameters.GenerateA(Ni);
 
                 sp.f = StartParameters.GenerateF(Ni, sp.A);
-                //CHECK f
-                //Console.WriteLine("f: ");
-                //foreach (double fi in sp.f)
-                //{
-                //    Console.Write("{0} ", fi);
-                //}
-                //Console.WriteLine();
+
                 //-----------------------START PARAMETERS-----------------------
 
                 time = 0;
@@ -61,100 +44,52 @@ namespace _5_nm_1
                     stopwatch.Restart();
 
                     lu.U = LU_Decomposition.GenerateU(Ni, sp.A);
-                    //CHECK U
-                    //Console.WriteLine("U: ");
-                    //foreach (double u in lu.U)
-                    //{
-                    //    Console.Write("{0} ", u);
-                    //}
-                    //Console.WriteLine();
 
                     lu.L = LU_Decomposition.GenerateL(Ni, sp.A, lu.U);
-                    //CHECK L
-                    //Console.WriteLine("L: ");
-                    //foreach (double l in lu.L)
-                    //{
-                    //    Console.Write("{0} ", l);
-                    //}
-                    //Console.WriteLine();
-
-                    //CHECK = L * U
-                    //Array.Resize(ref check, Ni * Ni);
-                    //for (int k = 0; k < Ni; k++)
-                    //{
-                    //    for (int i = 0; i < Ni; i++)
-                    //    {
-                    //        check[k * Ni + i] = 0;
-                    //        for (int j = 0; j < Ni; j++)
-                    //        {
-                    //            check[k * Ni + i] += lu.L[k * Ni + j] * lu.U[j * Ni + i];
-                    //        }
-                    //    }
-                    //}
-                    //L * U = A?
-                    //Console.WriteLine("check: ");
-                    //foreach (double c in check)
-                    //{
-                    //    Console.Write("{0} ", c);
-                    //}
-                    //Console.WriteLine();
-
-                    //for (int i = 0; i < Ni; i++)
-                    //{
-                    //    for (int j = 0; j < Ni; j++)
-                    //    {
-                    //        if (Math.Abs(sp.A[i * Ni + j] - check[i * Ni + j]) < 1)
-                    //        {
-                    //            Console.WriteLine("ok");
-                    //        }
-                    //        else
-                    //        {
-                    //            Console.WriteLine("bad: {0}, {1}", sp.A[i * Ni + j], check[i * Ni + j]);
-                    //        }
-                    //    }
-                    //}
 
                     lu.y = LU_Decomposition.GenerateY(Ni, lu.L, sp.f);
-                    //CHECK y
-                    //Console.WriteLine("y: ");
-                    //foreach (double yi in lu.y)
-                    //{
-                    //    Console.Write("{0} ", yi);
-                    //}
-                    //Console.WriteLine();
 
                     lu.x = LU_Decomposition.GenerateResult(Ni, lu.U, lu.y);
-                    //CHECK LU RESULT
-                    //Console.WriteLine("x: ");
-                    //foreach (double xi in lu.x)
-                    //{
-                    //    Console.Write("{0} ", xi);
-                    //}
-                    //Console.WriteLine();
-
-                    //CHECK GAUSS RESULT
-                    //lu.x = LU_Decomposition.GenerateGaussResult(Ni, sp.A, sp.f);
-                    //Console.WriteLine("x: ");
-                    //foreach (double xi in lu.x)
-                    //{
-                    //    Console.Write("{0} ", xi);
-                    //}
-                    //Console.WriteLine();
 
                     stopwatch.Stop();
 
-                    time += Convert.ToInt32(stopwatch.ElapsedMilliseconds);
+                    time += stopwatch.ElapsedMilliseconds;
                 }
-                Console.WriteLine(SupportingFunctions.SubstractVectors(Ni, sp.x, lu.x));
-                Console.WriteLine(SupportingFunctions.GetNorm(Ni, sp.x));
                 delta = SupportingFunctions.GetNorm(Ni, SupportingFunctions.SubstractVectors(Ni, sp.x, lu.x)) / SupportingFunctions.GetNorm(Ni, sp.x);
 
                 time /= numberOfTests;
                 Console.WriteLine("N = {0}, time of LU-decomposition (sec) = {1}, delta = {2}", Ni, Convert.ToDouble(time) / 1000, delta);
+
+
+                time = 0;
+                for (int i = 0; i < numberOfTests; i++)
+                {
+                    stopwatch.Restart();
+
+                    hh.GenerateQR(Ni, sp.A);
+
+                    hh.GenerateY(Ni, sp.f);
+
+                    hh.GenerateX(Ni);
+
+                    stopwatch.Stop();
+
+                    time += stopwatch.ElapsedMilliseconds;
+                }
+                delta = SupportingFunctions.GetNorm(Ni, SupportingFunctions.SubstractVectors(Ni, sp.x, hh.x)) / SupportingFunctions.GetNorm(Ni, sp.x);
+
+                time /= numberOfTests;
+                Console.WriteLine("N = {0}, time of Householder transformation (sec) = {1}, delta = {2}", Ni, Convert.ToDouble(time) / 1000, delta);
+
+                //for (int i = 0; i < Ni; i++)
+                //{
+                //    Console.Write("{0} ", hh.x[i]);
+                //}
             }
         }
 
     }
+
     class StartParameters
     {
         public double[] x;
@@ -234,6 +169,7 @@ namespace _5_nm_1
             return f;
         }
     }
+
     class LU_Decomposition
     {
         public double[] U;
@@ -410,6 +346,114 @@ namespace _5_nm_1
         }
     }
 
+    class Householder_Transformation
+    {
+        private double[] Q;
+        private double[] R;
+        private double[] y;
+        public double[] x;
+
+        public void GenerateQR(int Ni, double[] A)
+        {
+            double beta;
+            double[] p = new double[1];
+            double[] H = new double[Ni * Ni];
+
+            Q = new double[Ni * Ni];
+            R = new double[Ni * Ni];
+
+            for (int i = 0; i < Ni * Ni; i++)
+            {
+                R[i] = A[i];
+            }
+
+            for (int i = 0; i < Ni; i++)
+            {
+                Q[Ni * i + i] = 1;
+            }
+
+            for (int column = 0; column < Ni - 1; column++)
+            {
+                if (-R[Ni * column + column] < 0)
+                    beta = -1;
+                else
+                    beta = 1;
+
+                Array.Resize(ref p, Ni - column);
+
+                for (int i = 0; i < Ni; i++)
+                {
+                    for (int j = 0; j < Ni; j++)
+                    {
+                        if (i == j)
+                        {
+                            H[Ni * i + j] = 1;
+                        }
+                        else
+                        {
+                            H[Ni * i + j] = 0;
+                        }
+                    }
+                }
+
+                for (int row = 0; row < Ni - column; row++)
+                {
+                    p[row] = R[Ni * (row + column) + column];
+                }
+
+                beta *= SupportingFunctions.GetNorm(Ni - column, p);
+                p[0] -= beta;
+
+                beta = SupportingFunctions.GetNorm(Ni - column, p);
+                for (int i = 0; i < Ni - column; i++)
+                {
+                    p[i] /= beta;
+                }
+
+                for (int i = 0; i < Ni - column; i++)
+                {
+                    for (int j = 0; j < Ni - column; j++)
+                    {
+                        H[(i + column) * Ni + (j + column)] -= 2 * p[i] * p[j];
+                    }
+                }
+
+                
+                Q = SupportingFunctions.MultiplyMatriсes(Ni, Q, H);
+                R = SupportingFunctions.MultiplyMatriсes(Ni, H, R);
+            }
+        }
+
+        public void GenerateY (int Ni, double[] f)
+        {
+            y = new double[Ni];
+
+            Q = SupportingFunctions.TransposeMatrix(Ni, Q);
+
+            for (int i = 0; i < Ni; i++)
+            {
+                for (int j = 0; j < Ni; j++)
+                {
+                    y[i] += Q[i * Ni + j] * f[j];
+                }
+            }
+        }
+
+        public void GenerateX (int Ni)
+        {
+            x = new double[Ni];
+            for (int i = Ni - 1; i >= 0; i--)
+            {
+                x[i] = y[i];
+                for (int j = Ni - 1; j > i; j--)
+                {
+                    x[i] -= R[i * Ni + j] * x[j];
+                }
+                x[i] /= R[i * Ni + i];
+            }
+        }
+    }
+
     class SupportingFunctions
     {
         public static double[] SubstractVectors(int Ni, double[] x, double[] y)
@@ -434,6 +478,41 @@ namespace _5_nm_1
             norm = Math.Pow(norm, 0.5);
 
             return norm;
+        }
+        
+        public static double[] MultiplyMatriсes(int Ni, double[] A, double[] B)
+        {
+            double[] C = new double[Ni * Ni];
+
+            for (int i = 0; i < Ni; i++)
+            {
+                for (int j = 0; j < Ni; j++)
+                {
+                    for (int k = 0; k < Ni; k++)
+                    {
+                        C[i * Ni + j] += A[i * Ni + k] * B[k * Ni + j];
+                    }
+                }
+            }
+
+            return C;
+        }
+
+        public static double[] TransposeMatrix(int Ni, double[] A)
+        {
+            double temp;
+
+            for (int i = 0; i < Ni; i++)
+            {
+                for (int j = i; j < Ni; j++)
+                {
+                    temp = A[i * Ni + j];
+                    A[i * Ni + j] = A[j * Ni + i];
+                    A[j * Ni + i] = temp;
+                }
+            }
+
+            return A;
         }
     }
 }
