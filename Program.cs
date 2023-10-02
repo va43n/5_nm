@@ -9,7 +9,7 @@ namespace _5_nm_1
         static void Main() 
         {
             //TEST N
-            int[] N = { 200 };
+            int[] N = { 100 };
             //int[] N = { 200, 400, 800 };
 
             long time;
@@ -83,7 +83,7 @@ namespace _5_nm_1
 
                 //for (int i = 0; i < Ni; i++)
                 //{
-                //    Console.Write("{0} ", hh.x[i]);
+                //    Console.Write("{0} ", Math.Round(hh.x[i]));
                 //}
             }
         }
@@ -355,72 +355,149 @@ namespace _5_nm_1
 
         public void GenerateQR(int Ni, double[] A)
         {
-            double beta;
-            double[] p = new double[1];
+            double beta, dtemp, mu;
+            double[] p = new double[Ni];
             double[] H = new double[Ni * Ni];
+            //double[] temp;
 
             Q = new double[Ni * Ni];
             R = new double[Ni * Ni];
 
-            for (int i = 0; i < Ni * Ni; i++)
-            {
-                R[i] = A[i];
-            }
+            //temp = new double[Ni * Ni];
+
+            //for (int i = 0; i < Ni * Ni; i++)
+            //{
+            //    R[i] = A[i];
+            //}
 
             for (int i = 0; i < Ni; i++)
             {
                 Q[Ni * i + i] = 1;
             }
 
-            for (int column = 0; column < Ni - 1; column++)
+            //for (int column = 0; column < Ni - 1; column++)
+            //{
+            //    if (-A[Ni * column + column] < 0)
+            //        beta = -1;
+            //    else
+            //        beta = 1;
+
+            //    for (int row = 0; row < Ni; row++)
+            //    {
+            //        p[row] = A[Ni * row + column];
+            //    }
+
+            //    beta *= SupportingFunctions.GetNorm(Ni - column, p);
+
+            //    if (Math.Abs(beta) - A[column * Ni + column] < Math.Pow(10, -15))
+            //    {
+            //        continue;
+            //    }
+
+            //    p[column] -= beta;
+
+            //    mu = 1.0 / beta / (beta - p[column]);
+
+            //    for (int i = 0; i < Ni; i++)
+            //    {
+            //        for (int j = 0; j < Ni; j++)
+            //        {
+            //            if (i == j)
+            //            {
+            //                H[Ni * i + j] = 1;
+            //            }
+            //            else
+            //            {
+            //                H[Ni * i + j] = 0;
+            //            }
+            //        }
+            //    }
+
+            //    for(int i = column; i < Ni; i++)
+            //    {
+            //        dtemp = 0;
+            //        for (int j = column; j < Ni; j++)
+            //        {
+            //            dtemp += A[j * Ni + column] * p[j];
+            //        }
+            //        dtemp *= mu;
+            //        for (int j = column; j < Ni; j++)
+            //        {
+            //            A[j * Ni + column] -= dtemp * p[j];
+            //        }
+            //    }
+
+            //    for (int i = 0; i < Ni; i++)
+            //    {
+            //        dtemp = 0;
+            //        for (int j = column; j < Ni; j++)
+            //        {
+            //            dtemp += Q[j * Ni + column] * p[j];
+            //        }
+            //        dtemp *= mu;
+            //        for (int j = column; j < Ni; j++)
+            //        {
+            //            Q[j * Ni + column] -= dtemp * p[j];
+            //        }
+            //    }
+            //}
+            //for (int i = 0; i < Ni * Ni; i++)
+            //{
+            //    R[i] = A[i];
+            //}
+
+
+            for (int i = 0; i < Ni * Ni; i++)
             {
-                if (-R[Ni * column + column] < 0)
-                    beta = -1;
-                else
-                    beta = 1;
+                R[i] = A[i];
+            }
 
-                Array.Resize(ref p, Ni - column);
+                //алгоритм отражений Хаусхолдера
+            for (int i = 0; i < Ni - 1; i++)
+            {
+                //находим квадрат нормы столбца для обнуления
+                dtemp = 0;
+                for (int I = i; I < Ni; I++) dtemp += Math.Pow(R[I * Ni + i], 2);
 
-                for (int i = 0; i < Ni; i++)
+                //если есть ненулевые элементы под диагональю, тогда 
+                //квадрат нормы вектора для обнуления не совпадает с квадратом диагонального элемента
+                if (Math.Sqrt(Math.Abs(dtemp - R[i * Ni + i] * R[i * Ni + i])) > Math.Pow(10, -15))
                 {
-                    for (int j = 0; j < Ni; j++)
+                    //выбор знака слагаемого beta = sign(-x1)
+                    if (R[i * Ni + i] < 0) beta = Math.Sqrt(dtemp);
+                    else beta = -Math.Sqrt(dtemp);
+
+                    //вычисляем множитель в м.Хаусхолдера mu = 2 / ||p||^2
+                    mu = 1.0 / beta / (beta - R[i * Ni + i]);
+
+                    //формируем вектор p
+                    for (int I = 0; I < Ni; I++) { p[I] = 0; if (I >= i) p[I] = R[I * Ni + i]; }
+
+                    //изменяем диагональный элемент
+                    p[i] -= beta;
+
+                    //вычисляем новые компоненты матрицы A = Hm * H(m-1) ... * A
+                    for (int m = i; m < Ni; m++)
                     {
-                        if (i == j)
-                        {
-                            H[Ni * i + j] = 1;
-                        }
-                        else
-                        {
-                            H[Ni * i + j] = 0;
-                        }
+                        //произведение S = At * p
+                        dtemp = 0;
+                        for (int n = i; n < Ni; n++) { dtemp += R[n * Ni + m] * p[n]; }
+                        dtemp *= mu;
+                        //A = A - 2 * p * (At * p)^t / ||p||^2
+                        for (int n = i; n < Ni; n++) { R[n * Ni + m] -= dtemp * p[n]; }
+                    }
+
+                    //вычисляем новые компоненты матрицы Q = Q * H1 * H2 * ...
+                    for (int m = 0; m < Ni; m++)
+                    {
+                        //произведение Q * p
+                        dtemp = 0;
+                        for (int n = i; n < Ni; n++) { dtemp += Q[m * Ni + n] * p[n]; }
+                        dtemp *= mu;
+                        //Q = Q - p * (Q * p)^t
+                        for (int n = i; n < Ni; n++) { Q[m * Ni + n] -= dtemp * p[n]; }
                     }
                 }
-
-                for (int row = 0; row < Ni - column; row++)
-                {
-                    p[row] = R[Ni * (row + column) + column];
-                }
-
-                beta *= SupportingFunctions.GetNorm(Ni - column, p);
-                p[0] -= beta;
-
-                beta = SupportingFunctions.GetNorm(Ni - column, p);
-                for (int i = 0; i < Ni - column; i++)
-                {
-                    p[i] /= beta;
-                }
-
-                for (int i = 0; i < Ni - column; i++)
-                {
-                    for (int j = 0; j < Ni - column; j++)
-                    {
-                        H[(i + column) * Ni + (j + column)] -= 2 * p[i] * p[j];
-                    }
-                }
-
-                
-                Q = SupportingFunctions.MultiplyMatriсes(Ni, Q, H);
-                R = SupportingFunctions.MultiplyMatriсes(Ni, H, R);
             }
         }
 
